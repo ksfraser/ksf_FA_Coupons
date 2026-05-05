@@ -1,0 +1,13 @@
+{
+    "name": "ksfraser/ksf_fa_coupons",
+    "description": "Coupon Management for FrontAccounting (CRM + Sales)",
+    "type": "frontaccounting-module",
+    "require": {
+        "ksfraser/ksf_fa_crm": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ksf\\FA\\Coupons\\": "src/"
+        }
+    }
+}
