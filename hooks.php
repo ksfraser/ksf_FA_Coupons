@@ -8,6 +8,7 @@ define('SS_COUPONS', 117 << 8);
 
 class hooks_fa_coupons extends hooks {
     var $module_name = 'fa_coupons';
+    var $version = '1.0.0';
 
     function install_options($app) {
         global $path_to_root;
