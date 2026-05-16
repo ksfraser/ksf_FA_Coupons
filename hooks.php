@@ -1,48 +1,56 @@
 <?php
 /**
- * FA_Coupons Module Hooks for FrontAccounting
- * Coupon Management (depends on ksf_FA_CRM, used by Sales)
+ * ksf_FA_Coupons Module Hooks for FrontAccounting
  */
 
-define('SS_COUPONS', 117 << 8);
+define('SS_ksf_FA_Coupons', 100 << 8);
 
-class hooks_fa_coupons extends hooks {
-    var $module_name = 'fa_coupons';
-    var $version = '1.0.0';
+class hooks_ksf_FA_Coupons extends hooks {
+    var $module_name = 'ksf_FA_Coupons';
 
-    function install_options($app) {
-        global $path_to_root;
-
-        switch($app->id) {
-            case 'CRM':
-                $app->add_rapp_function(0, _("Coupons"),
-                    $path_to_root."/modules/".$this->module_name."/coupons.php", 'SA_COUPONSVIEW', MENU_ENTRY);
-                break;
-            case 'Sales':
-                $app->add_lapp_function(0, _("Coupons"),
-                    $path_to_root."/modules/".$this->module_name."/coupons.php", 'SA_COUPONSVIEW', MENU_ENTRY);
-                break;
-        }
+    function install_extension($check_only=true) {
+        return true;
     }
 
-    function install_access() {
-        $security_sections[SS_COUPONS] = _("Coupon Management");
-        $security_areas['SA_COUPONSVIEW'] = array(SS_COUPONS | 1, _("View Coupons"));
-        $security_areas['SA_COUPONSCREATE'] = array(SS_COUPONS | 2, _("Create Coupons"));
-        $security_areas['SA_COUPONSMAINTENANCE'] = array(SS_COUPONS | 3, _("Manage Coupons"));
-        return array($security_areas, $security_sections);
+    function install_tabs($app) {
+        // Override in modules that add apps
+    }
+
+    function install_options($app) {
+        // Override in modules that add menu items
     }
 
     function activate_extension($company, $check_only=true) {
-        $updates = array(
-            'sql/fa_coupons.sql' => array($this->module_name),
-            'sql/fa_coupon_usage.sql' => array($this->module_name)
-        );
-        return $this->update_databases($company, $updates, $check_only);
+        $this->ensure_composer_dependencies();
+        return true;
     }
 
-    function db_prevoid($trans_type, $trans_no) {
-        // Handle voiding if coupons module tracks usage
+    function install_access() {
+        $security_sections[SS_ksf_FA_Coupons] = _("");
+        $security_areas['SA_ksf_FA_CouponsVIEW'] = array(SS_ksf_FA_Coupons | 1, _("View "));
+        $security_areas['SA_ksf_FA_CouponsMANAGE'] = array(SS_ksf_FA_Coupons | 2, _("Manage "));
+        return array($security_areas, $security_sections);
+    }
+    
+    private function ensure_composer_dependencies() {
+        $module_dir = dirname(__FILE__);
+        $autoload_path = $module_dir . '/vendor/autoload.php';
+        
+        if (file_exists($autoload_path)) {
+            return;
+        }
+        
+        $composer_path = $module_dir . '/composer.json';
+        if (!file_exists($composer_path)) {
+            return;
+        }
+        
+        chdir($module_dir);
+        $output = [];
+        $return_code = 0;
+        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
+        if ($return_code !== 0) {
+            error_log('KSF Module: composer install failed: ' . implode("\n", $output));
+        }
     }
 }
-?>
