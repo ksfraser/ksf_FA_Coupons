@@ -1,8 +1,8 @@
--- fa_coupons table
+-- 0_ksf_coupons_coupon table
 -- Coupon management (depends on ksf_FA_CRM)
 -- Used by Sales module for discounts
 
-CREATE TABLE IF NOT EXISTS `fa_coupons` (
+CREATE TABLE IF NOT EXISTS `0_ksf_coupons_coupon` (
     `coupon_id` INT(11) NOT NULL AUTO_INCREMENT,
     `coupon_code` VARCHAR(30) NOT NULL,
     `discount_type` VARCHAR(20) DEFAULT 'Percentage' COMMENT 'Percentage or Fixed',
