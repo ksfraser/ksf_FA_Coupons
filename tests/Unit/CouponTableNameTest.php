@@ -8,9 +8,9 @@ use PHPUnit\Framework\TestCase;
 
 /**
  * The coupon tables were created UNPREFIXED (`fa_coupons`,
- * `fa_coupon_usage`) but read as `TB_PREF . "fa_coupons"`, i.e.
- * `0_fa_coupons`. Neither name existed: the schema wrote `fa_coupons`
- * with no company prefix at all, and the code asked for `0_fa_coupons`.
+ * `fa_coupon_usage`) but read as `TB_PREF . "fa_coupons"`.
+ * Neither name existed: the schema wrote `fa_coupons`
+ * with no company prefix at all, and the code asked for the fa_-prefixed table.
  * Every read and write therefore failed with MySQL error 1146. The schema
  * files were never installed either: activate_extension() only ran
  * sql/install.sql, which was a placeholder comment.
@@ -38,7 +38,7 @@ class CouponTableNameTest extends TestCase
         $this->assertStringNotContainsString(
             'fa_coupons',
             $contents,
-            'includes/coupons_db.inc must not address 0_fa_coupons: that table is created by no schema'
+            'includes/coupons_db.inc must not address the fa_coupons table: no schema creates it'
         );
     }
 
