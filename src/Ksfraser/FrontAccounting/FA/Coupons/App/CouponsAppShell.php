@@ -4,6 +4,7 @@ declare(strict_types=1);
 namespace Ksfraser\FrontAccounting\FA\Coupons\App;
 
 use ksfraser\FrontAccounting\Common\App\AbstractAppShell;
+use ksfraser\FrontAccounting\Common\App\TabRegistration;
 use ksfraser\FrontAccounting\Common\Menu\FAModuleMenu;
 use Ksfraser\FrontAccounting\FA\Coupons\Controller\CouponsTabController;
 
