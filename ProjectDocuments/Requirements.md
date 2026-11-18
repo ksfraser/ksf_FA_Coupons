@@ -15,9 +15,10 @@ Manage coupon codes and discount rules for the FrontAccounting system. Supports 
 - FR-CP-01: Create a coupon with code, type, value, dates, and limits.
 - FR-CP-02: List all coupons (summary table).
 - FR-CP-03: Resolve a coupon by code for application at checkout.
-- FR-CP-04: Update coupon details.
+- FR-CP-04: Update coupon details (code, type, value, dates, limits, status).
 - FR-CP-05: Deactivate/activate a coupon.
-- FR-CP-06: Expose coupon fields via RELATED_TO_FIELDS for cross-module linking.
+- FR-CP-06: Track coupon usage (which coupon used on which invoice/customer).
+- FR-CP-07: Validate a coupon code (existence, active status, date validity, usage limits).
 
 ## Non-Functional Requirements
 - NF-CP-01: All database access uses native FA db_* calls.

@@ -1,29 +1,32 @@
 <?php
 declare(strict_types=1);
 require_once __DIR__ . '/ComposerDependencies.php';
-\Ksfraser\FrontAccounting\FA\Coupons\Utils\ComposerDependencies::ensure(__DIR__);
+\Ksfraser\FrontAccounting\FA\ImportMarketplace\Utils\ComposerDependencies::ensure(__DIR__);
 $autoload_path = dirname(__FILE__) . '/vendor/autoload.php';
 if (file_exists($autoload_path)) { require_once $autoload_path; }
 require_once __DIR__ . '/includes/common.inc';
 require_once __DIR__ . '/includes/events.inc';
 use ksfraser\RelatedTo\DTO\RelatedRecordDto;
-define('SS_ksf_FA_Coupons', 157 << 8);
+define('SS_ksf_FA_ImportMarketplace', 158 << 8);
 if (!defined('SA_COUPONS_VIEW')) {
-    define('SA_COUPONS_VIEW', SS_ksf_FA_Coupons | 1);
-    define('SA_CRM_MANAGE', SS_ksf_FA_Coupons | 2);
-    define('SA_CRM_ADMIN', SS_ksf_FA_Coupons | 3);
+    define('SA_COUPONS_VIEW', SS_ksf_FA_ImportMarketplace | 1);
+    define('SA_COUPONS_MANAGE', SS_ksf_FA_ImportMarketplace | 2);
+    define('SA_COUPONS_ADMIN', SS_ksf_FA_ImportMarketplace | 3);
 }
-class hooks_ksf_FA_Coupons extends hooks
-{
-    const RESPONDERS = array('RELATED_TO_FIELDS', 'COUPONS_RESOLVE', 'COUPONS_FIELDS', 'COUPONS_LIST');
-    var $module_name = 'ksf_FA_Coupons';
+class hooks_ksf_FA_ImportMarketplace extends hooks {
+    const RESPONDERS = array('RELATED_TO_FIELDS', 'IMPORTMARKETPLACE_RESOLVE', 'IMPORTMARKETPLACE_FIELDS', 'IMPORTMARKETPLACE_LIST');
+    var $module_name = 'ksf_FA_ImportMarketplace';
     var $version = '2.4.0';
     function install_tabs($app) {
         if ($app->id == 'orders') {
-            $this->add_module_app('coupons', _("Coupons"), 'modules/ksf_FA_Coupons/pages/coupons.php', SA_COUPONS_VIEW);
+            $this->add_module_app('coupons', _('Coupons'), 'modules/ksf_FA_Coupons/pages/coupons.php', SA_COUPONS_VIEW);
         }
     }
-    function install_options($app) { }
+    function install_options($app) {
+        if ($app->id == 'orders') {
+            $this->add_module_app('coupons_config', _('Coupon Config'), 'modules/ksf_FA_Coupons/pages/coupon_form.php', SA_COUPONS_MANAGE);
+        }
+    }
     function install_access() {
         $security_sections[SS_ksf_FA_Coupons] = _("Coupons & Discounts");
         $security_areas['SA_COUPONS_VIEW'] = array(SA_COUPONS_VIEW, _("View coupons"));
@@ -35,7 +38,8 @@ class hooks_ksf_FA_Coupons extends hooks
         if ($check_only) { return true; }
         \Ksfraser\FrontAccounting\FA\Coupons\Utils\ComposerDependencies::ensure(__DIR__);
         $this->update_databases($company, array(
-            'ksf_coupons_coupon.sql' => array('ksf_coupons_coupon', 'ksf_coupons_coupon_usage'),
+            '0_ksf_coupons_coupon.sql' => array('ksf_coupons_coupon'),
+            '0_ksf_coupons_coupon_usage.sql' => array('ksf_coupons_coupon_usage'),
         ), false);
         return true;
     }
@@ -46,7 +50,7 @@ class hooks_ksf_FA_Coupons extends hooks
         $data['constants'] = array(
             'SS_ksf_FA_Coupons' => SS_ksf_FA_Coupons,
             'SA_COUPONS_VIEW' => SA_COUPONS_VIEW,
-            'SA_CRM_MANAGE' => SA_CRM_MANAGE,
+            'SA_COUPONS_MANAGE' => SA_CRM_MANAGE,
             'SA_CRM_ADMIN' => SA_CRM_ADMIN,
         );
         return true;
