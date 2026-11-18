@@ -6,8 +6,6 @@ namespace Ksfraser\FrontAccounting\FA\Coupons\Controller;
 
 use Ksfraser\FrontAccounting\Common\App\AbstractTabController;
 use Ksfraser\FrontAccounting\FA\Coupons\Service\CouponService;
-use ksfraser\RelatedTo\DTO\RelatedQueryDto;
-use ksfraser\RelatedTo\UI\DefaultRelatedRecordsRenderer;
 
 class CouponsTabController extends AbstractTabController
 {
@@ -19,7 +17,7 @@ class CouponsTabController extends AbstractTabController
         $this->service = new CouponService();
     }
 
-    protected function getPkField(): string { return 'coupon_id'; }
+    protected function getPkField(): string { return 'coupon_code'; }
 
     protected function getFieldMetadata(): array
     {
@@ -29,7 +27,7 @@ class CouponsTabController extends AbstractTabController
             'label'       => 'Coupon',
             'labelPlural' => 'Coupons',
             'hookPrefix'  => 'coupons',
-            'pk'          => 'coupon_id',
+            'pk'          => 'coupon_code',
             'fields'      => [],
             'fk_ddls'   => [],
             'ddlHooks'  => [],
@@ -72,14 +70,14 @@ class CouponsTabController extends AbstractTabController
         $th(_('Discount Value'));
         $th(_('Valid From'));
         $th(_('Valid To'));
-        $th(_('Max Uses'));
-        $th(_('Used'));
-        $th(_('Status'));
+        $th(_('Applies To'));
+        $th(_('Priority'));
+        $th(_('Stackable'));
         $th(_('Actions'));
         echo '</tr>';
 
         if (empty($rows)) {
-            echo '<tr><td colspan="9"><em>'
+            echo '<tr><td colspan="8"><em>'
                 . htmlspecialchars($this->localise('No coupons yet.'), ENT_QUOTES)
                 . '</em></td></tr>';
         }
@@ -91,9 +89,9 @@ class CouponsTabController extends AbstractTabController
             echo '<td>' . htmlspecialchars($row['fields']['discount_value'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
             echo '<td>' . htmlspecialchars($row['fields']['valid_from'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
             echo '<td>' . htmlspecialchars($row['fields']['valid_to'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
-            echo '<td>' . htmlspecialchars($row['fields']['max_uses'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
-            echo '<td>' . htmlspecialchars($row['fields']['used_count'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
-            echo '<td>' . htmlspecialchars($row['fields']['is_active'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
+            echo '<td>' . htmlspecialchars($row['fields']['applies_to_type'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
+            echo '<td>' . htmlspecialchars($row['fields']['apply_order'] ?? '', ENT_QUOTES, 'UTF-8') . '</td>';
+            echo '<td>' . ($row['fields']['stackable'] ? _('Yes') : _('No')) . '</td>';
             echo '<td><a href="' . htmlspecialchars($row['url'] ?? '#', ENT_QUOTES, 'UTF-8') . '" target="_blank">'
                 . htmlspecialchars($this->localise('View'), ENT_QUOTES, 'UTF-8') . '</a></td>'
             . '</tr>';
@@ -106,27 +104,5 @@ class CouponsTabController extends AbstractTabController
     {
         $lhsId = isset($_GET['id']) ? (string) $_GET['id'] : '';
         if ($lhsId === '' || !function_exists('hook_invoke')) return;
-
-        $queryDto = new RelatedQueryDto('ksf_coupons_coupon', $lhsId);
-        $queryResult = $queryDto;
-        hook_invoke('ksf_FA_RelatedTo', 'RELATED_TO', $queryResult, null);
-
-        if (!is_array($queryResult) || !isset($queryResult['related']) || !is_array($queryResult['related'])) {
-            return;
-        }
-
-        $renderer = new DefaultRelatedRecordsRenderer(array(
-            'css_class' => 'related-records',
-            'header_class' => 'related-header',
-            'table_class' => 'related-table',
-            'table_border' => true,
-            'type_labels' => array('ksf_coupons_coupon' => _('Coupon')),
-        ));
-        echo $renderer->renderRelatedRecords('ksf_coupons_coupon', $lhsId, $queryResult['related'], array(
-            'css_class' => 'related-records',
-            'header_class' => 'related-header',
-            'table_class' => 'related-table',
-            'table_border' => true,
-        ));
     }
 }

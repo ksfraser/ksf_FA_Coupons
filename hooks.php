@@ -1,120 +1,121 @@
 <?php
-/**
- * KSF FrontAccounting Module Hooks
- * 
- * STANDARD PATTERNS:
- * 
- * 1. ADDING MODULE TABS
- *    Define a class extending 'application' in hooks.php.
- *    Return new instance from install_tabs().
- *    Include add_extensions() to load other modules' install_options.
- * 
- * 2. ADDING MENU ITEMS TO EXISTING APPS
- *    Use install_options() with switch($app->id).
- *    Use add_module() + add_lapp_function() for new menu section.
- * 
- * 3. DATABASE SCHEMA
- *    DO NOT create tables in PHP code.
- *    Use sql/install.sql with @TB_PREF@ placeholders.
- *    Call $this->update_databases() in activate_extension().
- * 
- * 4. SECURITY
- *    Define SS_<MODULE> constant (section << 8).
- *    Define SA_<MODULE>VIEW and SA_<MODULE>MANAGE in install_access().
- * 
- * @package KsfFA_ksf_FA_Coupons
- * @version 2.4.3
- */
-
-define('SS_ksf_FA_Coupons', 127 << 8);
-
-class hooks_ksf_FA_Coupons extends hooks {
+declare(strict_types=1);
+require_once __DIR__ . '/ComposerDependencies.php';
+\Ksfraser\FrontAccounting\FA\Coupons\Utils\ComposerDependencies::ensure(__DIR__);
+$autoload_path = dirname(__FILE__) . '/vendor/autoload.php';
+if (file_exists($autoload_path)) { require_once $autoload_path; }
+require_once __DIR__ . '/includes/common.inc';
+require_once __DIR__ . '/includes/events.inc';
+use ksfraser\RelatedTo\DTO\RelatedRecordDto;
+define('SS_ksf_FA_Coupons', 157 << 8);
+if (!defined('SA_COUPONS_VIEW')) {
+    define('SA_COUPONS_VIEW', SS_ksf_FA_Coupons | 1);
+    define('SA_CRM_MANAGE', SS_ksf_FA_Coupons | 2);
+    define('SA_CRM_ADMIN', SS_ksf_FA_Coupons | 3);
+}
+class hooks_ksf_FA_Coupons extends hooks
+{
+    const RESPONDERS = array('RELATED_TO_FIELDS', 'COUPONS_RESOLVE', 'COUPONS_FIELDS', 'COUPONS_LIST');
     var $module_name = 'ksf_FA_Coupons';
-    var $version = '1.0.0';
-
-    /**
-     * Add module tab
-     * 
-     * Return new application class instance to add a tab.
-     * Omit or return nothing to skip tab addition.
-     * 
-     * @param application|null $app Ignored
-     * @return application|null New tab application instance or nothing
-     */
+    var $version = '2.4.0';
     function install_tabs($app) {
-        // Override in modules that add apps
-        // return new ksf_FA_Coupons_app();
+        if ($app->id == 'orders') {
+            $this->add_module_app('coupons', _("Coupons"), 'modules/ksf_FA_Coupons/pages/coupons.php', SA_COUPONS_VIEW);
+        }
     }
-
-    /**
-     * Add menu items to existing FA applications
-     * 
-     * @param application $app FA application instance
-     */
-    function install_options($app) {
-        // Override in modules that add menu items
-    }
-
-    /**
-     * Define security areas
-     * 
-     * @return array [0] => $security_areas, [1] => $security_sections
-     */
+    function install_options($app) { }
     function install_access() {
-        $security_sections[SS_ksf_FA_Coupons] = _("");
-        $security_areas['SA_ksf_FA_CouponsVIEW'] = array(
-            SS_ksf_FA_Coupons | 1, 
-            _("View ")
-        );
-        $security_areas['SA_ksf_FA_CouponsMANAGE'] = array(
-            SS_ksf_FA_Coupons | 2, 
-            _("Manage ")
-        );
+        $security_sections[SS_ksf_FA_Coupons] = _("Coupons & Discounts");
+        $security_areas['SA_COUPONS_VIEW'] = array(SA_COUPONS_VIEW, _("View coupons"));
+        $security_areas['SA_COUPONS_MANAGE'] = array(SA_CRM_MANAGE, _("Manage coupons"));
+        $security_areas['SA_CRM_ADMIN'] = array(SA_CRM_ADMIN, _("Administer coupons"));
         return array($security_areas, $security_sections);
     }
-
-    /**
-     * Activate extension
-     * 
-     * @param int $company Company number
-     * @param bool $check_only Only check if activation possible
-     * @return bool Success
-     */
-    function activate_extension($company, $check_only=true) {
-        $this->ensure_composer_dependencies();
-        
-        // One sql/<table>.sql per table, each gated on its own table, so a
-        // partially-installed database gets the missing tables individually.
-        // The FA install engine replaces the literal 0_ with TB_PREF.
-        $updates = array(
-            'ksf_coupons_coupon.sql'        => array('ksf_coupons_coupon'),
-            'ksf_coupons_coupon_usage.sql' => array('ksf_coupons_coupon_usage'),
-        );
-        return $this->update_databases($company, $updates, $check_only);
+    function activate_extension($company, $check_only = true) {
+        if ($check_only) { return true; }
+        \Ksfraser\FrontAccounting\FA\Coupons\Utils\ComposerDependencies::ensure(__DIR__);
+        $this->update_databases($company, array(
+            'ksf_coupons_coupon.sql' => array('ksf_coupons_coupon', 'ksf_coupons_coupon_usage'),
+        ), false);
+        return true;
     }
-
-    /**
-     * Install composer dependencies if needed
-     */
     private function ensure_composer_dependencies() {
-        $module_dir = dirname(__FILE__);
-        $autoload_path = $module_dir . '/vendor/autoload.php';
-        
-        if (file_exists($autoload_path)) {
-            return;
+        \Ksfraser\FrontAccounting\FA\Coupons\Utils\ComposerDependencies::ensure(__DIR__);
+    }
+    public function getModuleConstants(&$data, $opts = null) {
+        $data['constants'] = array(
+            'SS_ksf_FA_Coupons' => SS_ksf_FA_Coupons,
+            'SA_COUPONS_VIEW' => SA_COUPONS_VIEW,
+            'SA_CRM_MANAGE' => SA_CRM_MANAGE,
+            'SA_CRM_ADMIN' => SA_CRM_ADMIN,
+        );
+        return true;
+    }
+    public function getModuleCapabilities(&$data, $opts = null) {
+        $data['capabilities'] = self::RESPONDERS;
+        return true;
+    }
+    public function hasCapability(&$data, $opts) {
+        $capability = is_array($opts) && isset($opts['capability']) ? $opts['capability'] : null;
+        if ($capability === null && isset($data['capability'])) { $capability = $data['capability']; }
+        $data['has_capability'] = in_array($capability, self::RESPONDERS, true);
+        return $data['has_capability'];
+    }
+    public function respondToCapabilityRequest(&$data, $opts = null) {
+        $request = is_array($opts) && isset($opts['request']) ? $opts['request'] : (isset($data['request']) ? $data['request'] : 'capabilities');
+        $data['request'] = $request;
+        $data['module'] = $this->module_name;
+        if (strpos($request, 'has:') === 0) { return $this->hasCapability($data, array('capability' => substr($request, 4))); }
+        switch ($request) {
+            case 'capabilities': return $this->getModuleCapabilities($data, $opts);
+            case 'constants': return $this->getModuleConstants($data, $opts);
+            default: $data['error'] = 'Unknown request type: ' . $request; return null;
         }
-        
-        $composer_path = $module_dir . '/composer.json';
-        if (!file_exists($composer_path)) {
-            return;
-        }
-        
-        chdir($module_dir);
-        $output = array();
-        $return_code = 0;
-        exec('composer install --no-interaction --prefer-dist 2>&1', $output, $return_code);
-        if ($return_code !== 0) {
-            error_log('KSF Module: composer install failed: ' . implode("\n", $output));
-        }
+    }
+    public function RELATED_TO_FIELDS(&$data, $opts = null) {
+        if (!isset($data['module']) || !is_string($data['module'])) { $data['error'] = 'RELATED_TO_FIELDS requires data[module]'; return null; }
+        if (!isset($data['type']) || !is_string($data['type'])) { $data['error'] = 'RELATED_TO_FIELDS requires data[type]'; return null; }
+        if ($data['type'] !== 'ksf_coupons_coupon') { return null; }
+        if (!isset($data['fields']) || !is_array($data['fields'])) { $data['fields'] = array(); }
+        $data['fields'] = array_merge($data['fields'], array(
+            'coupon_code' => _('Coupon Code'),
+            'discount_type' => _('Discount Type'),
+            'discount_value' => _('Discount Value'),
+            'valid_from' => _('Valid From'),
+            'valid_to' => _('Valid To'),
+            'applies_to_type' => _('Applies To Type'),
+            'applies_to_id' => _('Applies To ID'),
+            'apply_order' => _('Apply Order'),
+            'stackable' => _('Stackable'),
+            'apply_to_original' => _('Apply to Original Price'),
+        ));
+        return null;
+    }
+    public function COUPONS_RESOLVE(&$data, $opts = null) {
+        if (!isset($data['coupon_code']) || !is_string($data['coupon_code'])) { $data['error'] = 'COUPONS_RESOLVE requires data[coupon_code]'; return null; }
+        if (!isset($data['dto']) || !$data['dto'] instanceof RelatedRecordDto) { $data['error'] = 'COUPONS_RESOLVE requires data[dto] as RelatedRecordDto'; return null; }
+        $service = new \Ksfraser\FrontAccounting\FA\Coupons\Service\CouponService();
+        $data['result'] = $service->resolveByCode((string) $data['coupon_code'], $data['dto']);
+        return null;
+    }
+    public function COUPONS_FIELDS(&$data, $opts = null) {
+        $data['fields'] = array(
+            'coupon_code' => _('Coupon Code'),
+            'discount_type' => _('Discount Type'),
+            'discount_value' => _('Discount Value'),
+            'valid_from' => _('Valid From'),
+            'valid_to' => _('Valid To'),
+            'applies_to_type' => _('Applies To Type'),
+            'applies_to_id' => _('Applies To ID'),
+            'apply_order' => _('Apply Order'),
+            'stackable' => _('Stackable'),
+            'apply_to_original' => _('Apply to Original Price'),
+        );
+        return null;
+    }
+    public function COUPONS_LIST(&$data, $opts = null) {
+        $service = new \Ksfraser\FrontAccounting\FA\Coupons\Service\CouponService();
+        $data['result'] = $service->listAll();
+        return null;
     }
 }
