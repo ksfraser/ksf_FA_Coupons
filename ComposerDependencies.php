@@ -16,9 +16,11 @@ if (!defined($ksfModuleComposerDepsSentinel) && !$ksfModuleComposerDepsWasDeclar
             if (file_exists($autoloadPath)) { return true; }
             $composerPath = $moduleDir . '/composer.json';
             if (!file_exists($composerPath)) { return false; }
+            $cwd = getcwd();
             chdir($moduleDir);
             $output = []; $returnCode = 0;
             exec('composer install --no-interaction --prefer-dist 2>&1', $output, $returnCode);
+            if ($cwd !== false) { chdir($cwd); }
             if ($returnCode !== 0) { error_log('KSF Module: composer install failed: ' . implode("\n", $output)); }
             return file_exists($autoloadPath);
         }
